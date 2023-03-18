@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutterhive/boxes/boxes.dart';
+import 'package:flutterhive/model/notes_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -9,6 +10,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final TextEditingController titleController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,35 +22,67 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
-          children: [
-            FutureBuilder(
-                future: Hive.openBox('hivebox'),
-                builder: (context, snapshot) {
-                  return Column(
-                    children: [
-                      Text(snapshot.data!.get('name').toString()),
-                      Text(snapshot.data!.get('List').toString()),
-                      Text(snapshot.data!.get('name').toString()),
-                    ],
-                  );
-                })
-          ],
+          children: [],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          var box = await Hive.openBox('hivebox');
-          var box2 = await Hive.openBox('hivebox2');
-
-          box.put('name', 'crpoudyal');
-          box.put('pro', 'Developer');
-          box.put('List', {'age': 24, 'address': 'Brt'});
-
-          print(box.get('name'));
-          print(box.get('List')['age']);
+          _showMyDialog();
         },
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _showMyDialog() async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Add Notes"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      hintText: "Enter Title",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      hintText: "Enter Description",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Cancel")),
+              TextButton(
+                  onPressed: () {
+                    final data = NotesModel(
+                      title: titleController.text.toString(),
+                      description: descriptionController.text.toString(),
+                    );
+
+                    final box = Boxes.getData();
+                    box.add(data);
+                    data.save();
+                  },
+                  child: const Text("Add")),
+            ],
+          );
+        });
   }
 }
