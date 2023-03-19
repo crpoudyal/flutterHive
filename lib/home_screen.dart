@@ -28,17 +28,48 @@ class _HomeScreenState extends State<HomeScreen> {
             var data = box.values.toList().cast<NotesModel>();
             return ListView.builder(
                 itemCount: box.length,
+                reverse: true,
+                shrinkWrap: true,
                 itemBuilder: (context, index) {
                   return Card(
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            data[index].title.toString(),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w600, fontSize: 24),
+                          Row(
+                            children: [
+                              Text(
+                                data[index].title.toString(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 24),
+                              ),
+                              const Spacer(),
+                              InkWell(
+                                onTap: () {
+                                  _editDialog(
+                                      data[index],
+                                      data[index].title.toString(),
+                                      data[index].description.toString());
+                                },
+                                child: const Icon(
+                                  Icons.edit,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              InkWell(
+                                  onTap: () {
+                                    deleteNotes(data[index]);
+                                  },
+                                  child: const Icon(
+                                    Icons.delete,
+                                    color: Colors.red,
+                                  ))
+                            ],
                           ),
                           const SizedBox(
                             height: 10,
@@ -59,6 +90,70 @@ class _HomeScreenState extends State<HomeScreen> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> deleteNotes(NotesModel notesModel) async {
+    await notesModel.delete();
+  }
+
+  Future<void> _editDialog(
+      NotesModel notesModel, String title, String description) async {
+    titleController.text = title;
+    descriptionController.text = description;
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Edit Notes"),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: titleController,
+                    decoration: const InputDecoration(
+                      hintText: "Enter Title",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      hintText: "Enter Description",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  titleController.clear();
+                  descriptionController.clear();
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  notesModel.title = titleController.text.toString();
+                  notesModel.description =
+                      descriptionController.text.toString();
+
+                  notesModel.save();
+
+                  titleController.clear();
+                  descriptionController.clear();
+                  Navigator.pop(context);
+                },
+                child: const Text("Edit"),
+              ),
+            ],
+          );
+        });
   }
 
   Future<void> _showMyDialog() async {
