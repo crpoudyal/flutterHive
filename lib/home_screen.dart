@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutterhive/boxes/boxes.dart';
 import 'package:flutterhive/model/notes_model.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -21,8 +22,34 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [],
+        child: ValueListenableBuilder<Box<NotesModel>>(
+          valueListenable: Boxes.getData().listenable(),
+          builder: (context, box, _) {
+            var data = box.values.toList().cast<NotesModel>();
+            return ListView.builder(
+                itemCount: box.length,
+                itemBuilder: (context, index) {
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            data[index].title.toString(),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 24),
+                          ),
+                          const SizedBox(
+                            height: 10,
+                          ),
+                          Text(data[index].description.toString()),
+                        ],
+                      ),
+                    ),
+                  );
+                });
+          },
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -65,22 +92,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text("Cancel")),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("Cancel"),
+              ),
               TextButton(
-                  onPressed: () {
-                    final data = NotesModel(
-                      title: titleController.text.toString(),
-                      description: descriptionController.text.toString(),
-                    );
+                onPressed: () {
+                  final data = NotesModel(
+                    title: titleController.text.toString(),
+                    description: descriptionController.text.toString(),
+                  );
 
-                    final box = Boxes.getData();
-                    box.add(data);
-                    data.save();
-                  },
-                  child: const Text("Add")),
+                  final box = Boxes.getData();
+                  box.add(data);
+                  data.save();
+                  // Clearing text after adding
+                  titleController.clear();
+                  descriptionController.clear();
+                  Navigator.pop(context);
+                },
+                child: const Text("Add"),
+              ),
             ],
           );
         });
